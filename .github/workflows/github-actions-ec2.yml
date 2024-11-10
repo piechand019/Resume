@@ -11,11 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Set up Node.js environment
       - name: Set up Node.js 20
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # Step 2: Clone the repository manually
       - name: Clone repository manually
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -23,14 +25,23 @@ jobs:
           git clone https://github.com/${{ github.repository }}.git
           cd $(basename ${{ github.repository }})
 
+      # Step 3: Test SSH connection to EC2 before deploying
+      - name: Test SSH Connection to EC2
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} echo "SSH connection successful"
+
+      # Step 4: Deploy to Server 1 using ssh-deploy action
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.RESUME_TERRAFORM_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+          SSH_PRIVATE_KEY: ${{ secrets.RESUME_TERRAFORM_SSH_KEY }}  # SSH private key
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}  # EC2 host (DNS or IP)
+          REMOTE_USER: ${{ secrets.USERNAME }}  # EC2 username (e.g., 'ubuntu', 'ec2-user')
+          TARGET: ${{ secrets.TARGET_DIR }}  # Directory on the server where files will be deployed
 
+      # Step 5: Execute additional SSH commands (optional, e.g., install software)
       - name: Executing remote SSH commands
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -42,5 +53,4 @@ jobs:
             sudo apt-get install -y apache2
             sudo systemctl start apache2
             sudo systemctl enable apache2
-            cd $HOME
-            sudo mv * /var/www/html
+            sudo mv * /var/www/html  # Move the files to the web root
