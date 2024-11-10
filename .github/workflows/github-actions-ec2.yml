@@ -28,9 +28,19 @@ jobs:
       # Step 3: Test SSH Connection to EC2
       - name: Test SSH Connection to EC2
         run: |
-          mkdir -p ~/.ssh  # Ensure .ssh directory exists
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Write SSH private key
-          chmod 600 ~/.ssh/id_rsa  # Set proper permissions for the key
+          # Ensure .ssh directory exists
+          mkdir -p ~/.ssh
+          
+          # Write the SSH private key to a file
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          
+          # Set correct permissions for the SSH private key
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Add EC2's host to known hosts to avoid SSH warnings about unknown hosts
+          ssh-keyscan -H ${{ secrets.HOST_DNS }} >> ~/.ssh/known_hosts
+          
+          # Test SSH connection
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} echo "SSH connection successful"
 
       # Step 4: Deploy to Server 1 using ssh-deploy action
