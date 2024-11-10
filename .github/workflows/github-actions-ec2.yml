@@ -16,10 +16,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Clone repository
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clone repository manually
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone https://github.com/${{ github.repository }}.git
+          cd $(basename ${{ github.repository }})
 
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
