@@ -25,11 +25,12 @@ jobs:
           git clone https://github.com/${{ github.repository }}.git
           cd $(basename ${{ github.repository }})
 
-      # Step 3: Test SSH connection to EC2 before deploying
+      # Step 3: Test SSH Connection to EC2
       - name: Test SSH Connection to EC2
         run: |
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          mkdir -p ~/.ssh  # Ensure .ssh directory exists
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Write SSH private key
+          chmod 600 ~/.ssh/id_rsa  # Set proper permissions for the key
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} echo "SSH connection successful"
 
       # Step 4: Deploy to Server 1 using ssh-deploy action
